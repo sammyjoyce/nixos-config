@@ -90,6 +90,11 @@ stdenv.mkDerivation (finalAttrs: {
     7z x "Parallels Desktop.app/Contents/Resources/Tools/prl-tools-lin${lib.optionalString stdenv.hostPlatform.isAarch64 "-arm"}.iso" -o$sourceRoot
     ( cd $sourceRoot/kmods; tar -xaf prl_mod.tar.gz )
 
+    # Modify Makefile.kmods to skip BTF generation if vmlinux is not available
+    substituteInPlace $sourceRoot/kmods/Makefile.kmods \
+      --replace "CONFIG_DEBUG_INFO_BTF=y" "CONFIG_DEBUG_INFO_BTF=n" \
+      --replace "CONFIG_DEBUG_INFO_BTF_MODULES=y" "CONFIG_DEBUG_INFO_BTF_MODULES=n"
+
     runHook postUnpack
   '';
 
