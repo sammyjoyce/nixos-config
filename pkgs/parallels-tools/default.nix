@@ -103,6 +103,8 @@ stdenv.mkDerivation (finalAttrs: {
 
     ( # kernel modules
       cd kmods
+      # Apply the linux-6.12 patch
+      patch -p1 < ${./linux-6.12.patch}
       find . -name "*.c" -print0 | xargs -0 sed -i \
         -e 's/struct page \*page/struct folio \*folio/g' \
         -e 's/PageUptodate/folio_test_uptodate/g' \
