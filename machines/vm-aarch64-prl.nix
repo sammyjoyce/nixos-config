@@ -55,6 +55,12 @@ in {
       efi.canTouchEfiVariables = true;
       systemd-boot.enable = true;
     };
+    kernelPatches = [
+      {
+        name = "prl_fs-6.12-patch";
+        patch = ../pkgs/parallels-tools/linux-6.12-prl_fs.patch;
+      }
+    ];
   };
 
   fileSystems = {
