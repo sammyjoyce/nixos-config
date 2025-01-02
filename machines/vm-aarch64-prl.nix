@@ -1,10 +1,20 @@
-{ config, pkgs, lib, modulesPath, ... }: {
+{
+  config,
+  lib,
+  pkgs,
+  modulesPath,
+  ...
+}:
+let
+  prl-tools = pkgs.callPackage ../pkgs/parallels-tools {
+    kernel = config.boot.kernelPackages.kernel;
+  };
+in {
   imports = [
     # Parallels is qemu under the covers. This brings in important kernel
     # modules to get a lot of the stuff working.
     (modulesPath + "/profiles/qemu-guest.nix")
 
-    ./hardware/vm-aarch64-prl.nix
     ../modules/parallels-guest.nix
     ./vm-shared.nix
   ];
@@ -23,4 +33,47 @@
   # Lots of stuff that uses aarch64 that claims doesn't work, but actually works.
   nixpkgs.config.allowUnfree = true;
   nixpkgs.config.allowUnsupportedSystem = true;
+
+
+  boot = {
+    initrd = {
+      availableKernelModules = [
+        "xhci_pci"
+        "usbhid"
+        "sr_mod"
+      ];
+      kernelModules = [ ];
+    };
+    kernelModules = [ ];
+    kernelParams = [
+      "root=/dev/sda2"
+      "xhci_hcd.quirks=0x40"
+    ];
+    extraModulePackages = [ ];
+    loader = {
+      efi.canTouchEfiVariables = true;
+      systemd-boot.enable = true;
+    };
+  };
+
+  fileSystems = {
+    "/" = {
+      device = "/dev/disk/by-label/nixos";
+      fsType = "btrfs";
+    };
+    "/boot" = {
+      device = "/dev/disk/by-label/boot";
+      fsType = "vfat";
+    };
+  };
+
+  swapDevices = [ ];
+
+  hardware.parallels = {
+    enable = true;
+  };
+
+  environment.systemPackages = [
+    prl-tools
+  ];
 }
