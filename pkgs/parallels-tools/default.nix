@@ -111,6 +111,13 @@ stdenv.mkDerivation (finalAttrs: {
         KVER=${kernelVersion}
     )
 
+    # Diagnostic: List files in prl_fs directory after build
+    echo "Listing files in prl_fs directory after build:"
+    find kmods/prl_fs/SharedFolders/Guest/Linux/prl_fs -type f
+
+    # Diagnostic: Check exit code of the make command
+    echo "Exit code of make command: $?"
+
     runHook postBuild
   '';
 
