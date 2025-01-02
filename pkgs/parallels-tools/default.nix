@@ -2,7 +2,6 @@
   lib,
   stdenv,
   fetchurl,
-  autoPatchelfHook,
   bbe,
   makeWrapper,
   p7zip,
