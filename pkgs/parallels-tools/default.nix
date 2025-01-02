@@ -47,7 +47,7 @@ stdenv.mkDerivation (finalAttrs: {
   # => ${dmg}/Parallels\ Desktop.app/Contents/Resources/Tools/prl-tools-lin.iso
   src = fetchurl {
     url = "https://download.parallels.com/desktop/v${lib.versions.major finalAttrs.version}/${finalAttrs.version}/ParallelsDesktop-${finalAttrs.version}.dmg";
-    hash = "sha256-R7pQhmLpMOHExPwH4YM3WDnp1PcwpH5Bif3C1/N55Bg=";
+    hash = "sha256-qyRSX3FrnVxB6NU8N2CsOhsnuhK6+82oe6ftcfs9a14=";
   };
 
   hardeningDisable = [
