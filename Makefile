@@ -1,5 +1,5 @@
 # Connectivity info for Linux VM
-NIXADDR ?= unset
+NIXADDR ?= 10.211.55.4
 NIXPORT ?= 22
 NIXUSER ?= mitchellh
 
@@ -7,7 +7,7 @@ NIXUSER ?= mitchellh
 MAKEFILE_DIR := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 
 # The name of the nixosConfiguration in the flake
-NIXNAME ?= vm-intel
+NIXNAME ?= vm-aarch64-prl
 
 # SSH options that are used. These aren't meant to be overridden but are
 # reused a lot so we just store them up here.
@@ -18,25 +18,25 @@ UNAME := $(shell uname)
 
 switch:
 ifeq ($(UNAME), Darwin)
-	nix build --extra-experimental-features nix-command --extra-experimental-features flakes ".#darwinConfigurations.${NIXNAME}.system"
-	./result/sw/bin/darwin-rebuild switch --flake "$$(pwd)#${NIXNAME}"
+	nix build --show-trace --extra-experimental-features nix-command --extra-experimental-features flakes ".#darwinConfigurations.${NIXNAME}.system"
+	./result/sw/bin/darwin-rebuild switch --show-trace --flake "$$(pwd)#${NIXNAME}"
 else
-	sudo NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM=1 nixos-rebuild switch --flake ".#${NIXNAME}"
+	sudo NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM=1 nixos-rebuild switch --show-trace --flake ".#${NIXNAME}"
 endif
 
 test:
 ifeq ($(UNAME), Darwin)
-	nix build ".#darwinConfigurations.${NIXNAME}.system"
-	./result/sw/bin/darwin-rebuild test --flake "$$(pwd)#${NIXNAME}"
+	nix build --show-trace ".#darwinConfigurations.${NIXNAME}.system"
+	./result/sw/bin/darwin-rebuild test --show-trace --flake "$$(pwd)#${NIXNAME}"
 else
-	sudo NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM=1 nixos-rebuild test --flake ".#$(NIXNAME)"
+	sudo NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM=1 nixos-rebuild test --show-trace --flake ".#$(NIXNAME)"
 endif
 
 # This builds the given NixOS configuration and pushes the results to the
 # cache. This does not alter the current running system. This requires
 # cachix authentication to be configured out of band.
 cache:
-	nix build '.#nixosConfigurations.$(NIXNAME).config.system.build.toplevel' --json \
+	nix build --show-trace '.#nixosConfigurations.$(NIXNAME).config.system.build.toplevel' --json \
 		| jq -r '.[].outputs | to_entries[].value' \
 		| cachix push mitchellh-nixos-config
 
@@ -64,11 +64,11 @@ vm/bootstrap0:
 		mount /dev/disk/by-label/boot /mnt/boot; \
 		nixos-generate-config --root /mnt; \
 		sed --in-place '/system\.stateVersion = .*/a \
-			nix.package = pkgs.nixUnstable;\n \
+			nix.package = pkgs.nixVersions.git;\n \
 			nix.extraOptions = \"experimental-features = nix-command flakes\";\n \
 			nix.settings.substituters = [\"https://mitchellh-nixos-config.cachix.org\"];\n \
 			nix.settings.trusted-public-keys = [\"mitchellh-nixos-config.cachix.org-1:bjEbXJyLrL1HZZHBbO4QALnI5faYZppzkU4D2s0G8RQ=\"];\n \
-  			services.openssh.enable = true;\n \
+			services.openssh.enable = true;\n \
 			services.openssh.settings.PasswordAuthentication = true;\n \
 			services.openssh.settings.PermitRootLogin = \"yes\";\n \
 			users.users.root.initialPassword = \"root\";\n \
@@ -113,10 +113,11 @@ vm/copy:
 # have to run vm/copy before.
 vm/switch:
 	ssh $(SSH_OPTIONS) -p$(NIXPORT) $(NIXUSER)@$(NIXADDR) " \
-		sudo NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM=1 nixos-rebuild switch --flake \"/nix-config#${NIXNAME}\" \
+		sudo PARALLELS_TOOLS_ISO_PATH=\"/ruta/al/iso/prl-tools-lin-arm.iso\" \
+			NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM=1 nixos-rebuild switch --show-trace --flake \"/nix-config#${NIXNAME}\" \
 	"
 
 # Build a WSL installer
 .PHONY: wsl
 wsl:
-	 nix build ".#nixosConfigurations.wsl.config.system.build.installer"
+	 nix build --show-trace ".#nixosConfigurations.wsl.config.system.build.installer"

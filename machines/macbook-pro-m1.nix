@@ -18,8 +18,10 @@
     # public binary cache that I use for all my derivations. You can keep
     # this, use your own, or toss it. Its typically safe to use a binary cache
     # since the data inside is checksummed.
-    settings = {
-      substituters = ["https://mitchellh-nixos-config.cachix.org"];
+     settings = {
+    #   substituters = ["https://sammyjoyce-nixos-config.cachix.org"];
+    #   trusted-public-keys = ["sammyjoyce-nixos-config.cachix.org-1:1WuoON+PtJiKPuydwkiVRMbcxX/0BTZLtQMMobzkeP8="];
+     substituters = ["https://mitchellh-nixos-config.cachix.org"];
       trusted-public-keys = ["mitchellh-nixos-config.cachix.org-1:bjEbXJyLrL1HZZHBbO4QALnI5faYZppzkU4D2s0G8RQ="];
     };
   };

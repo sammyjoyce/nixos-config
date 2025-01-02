@@ -21,7 +21,9 @@ in {
     # this, use your own, or toss it. Its typically safe to use a binary cache
     # since the data inside is checksummed.
     settings = {
-      substituters = ["https://mitchellh-nixos-config.cachix.org"];
+    #   substituters = ["https://sammyjoyce-nixos-config.cachix.org"];
+    #   trusted-public-keys = ["sammyjoyce-nixos-config.cachix.org-1:1WuoON+PtJiKPuydwkiVRMbcxX/0BTZLtQMMobzkeP8="];
+     substituters = ["https://mitchellh-nixos-config.cachix.org"];
       trusted-public-keys = ["mitchellh-nixos-config.cachix.org-1:bjEbXJyLrL1HZZHBbO4QALnI5faYZppzkU4D2s0G8RQ="];
     };
   };
@@ -76,6 +78,7 @@ in {
     xkb.layout = "us";
     desktopManager.gnome.enable = true;
     displayManager.gdm.enable = true;
+
   } else {
     enable = true;
     xkb.layout = "us";
@@ -102,10 +105,7 @@ in {
     };
   };
 
-  # Enable tailscale. We manually authenticate when we want with
-  # "sudo tailscale up". If you don't use tailscale, you should comment
-  # out or delete all of this.
-  services.tailscale.enable = true;
+
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.mutableUsers = false;
@@ -115,10 +115,7 @@ in {
   fonts = {
     fontDir.enable = true;
 
-    packages = [
-      pkgs.fira-code
-      pkgs.jetbrains-mono
-    ];
+   
   };
 
   # List packages installed in system profile. To search, run:
