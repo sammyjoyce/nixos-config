@@ -69,10 +69,6 @@ in {
 
   swapDevices = [ ];
 
-  hardware.parallels = {
-    enable = true;
-  };
-
   environment.systemPackages = [
     prl-tools
   ];
