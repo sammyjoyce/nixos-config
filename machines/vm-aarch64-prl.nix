@@ -36,7 +36,7 @@ in {
 
 
   boot = {
-    kernelPackages = pkgs.linuxPackages_6_12;
+    kernelPackages = pkgs.linuxPackages_6_12; # Explicitly set for Parallels compatibility
     initrd = {
       availableKernelModules = [
         "xhci_pci"
