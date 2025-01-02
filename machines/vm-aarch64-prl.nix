@@ -58,7 +58,7 @@ in {
     kernelPatches = [
       {
         name = "prl_fs-6.12-patch";
-        patch = ../pkgs/parallels-tools/linux-6.12-prl_fs.patch;
+        patch = ../pkgs/parallels-tools/linux-6.12.patch;
       }
     ];
   };
