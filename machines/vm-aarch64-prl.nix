@@ -37,6 +37,7 @@ in {
 
   boot = {
     kernelPackages = pkgs.linuxPackages_6_12; # Explicitly set for Parallels compatibility
+    extraModulePackages = [ prl-tools ];
     initrd = {
       availableKernelModules = [
         "xhci_pci"
@@ -45,12 +46,11 @@ in {
       ];
       kernelModules = [ ];
     };
-    kernelModules = [ ];
+    kernelModules = [ "prl_fs" "prl_fs_freeze" "prl_tg" ];
     kernelParams = [
       "root=/dev/sda2"
       "xhci_hcd.quirks=0x40"
     ];
-    extraModulePackages = [ ];
     loader = {
       efi.canTouchEfiVariables = true;
       systemd-boot.enable = true;
