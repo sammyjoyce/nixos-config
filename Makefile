@@ -1,7 +1,7 @@
 # Connectivity info for Linux VM
 NIXADDR ?= 10.211.55.4
 NIXPORT ?= 22
-NIXUSER ?= mitchellh
+NIXUSER ?= sammyjoyce
 
 # Get the path to this Makefile and directory
 MAKEFILE_DIR := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
@@ -113,8 +113,7 @@ vm/copy:
 # have to run vm/copy before.
 vm/switch:
 	ssh $(SSH_OPTIONS) -p$(NIXPORT) $(NIXUSER)@$(NIXADDR) " \
-		sudo PARALLELS_TOOLS_ISO_PATH=\"/ruta/al/iso/prl-tools-lin-arm.iso\" \
-			NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM=1 nixos-rebuild switch --show-trace --flake \"/nix-config#${NIXNAME}\" \
+		sudo NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM=1 nixos-rebuild switch --show-trace --flake \"/nix-config#${NIXNAME}\" \
 	"
 
 # Build a WSL installer

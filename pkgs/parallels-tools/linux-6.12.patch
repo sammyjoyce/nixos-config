@@ -1,4 +1,4 @@
-diff --git kmods/prl_fs/SharedFolders/Guest/Linux/prl_fs/inode.c kmods/prl_fs/SharedFolders/Guest/Linux/prl_fs/inode.c
+diff --git a/kmods/prl_fs/SharedFolders/Guest/Linux/prl_fs/inode.c b/kmods/prl_fs/SharedFolders/Guest/Linux/prl_fs/inode.c
 index d604fff..7974e42 100644
 --- a/kmods/prl_fs/SharedFolders/Guest/Linux/prl_fs/inode.c
 +++ b/kmods/prl_fs/SharedFolders/Guest/Linux/prl_fs/inode.c

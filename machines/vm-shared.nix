@@ -6,9 +6,6 @@ let
   # for now.
   linuxGnome = true;
 in {
-  # Be careful updating this.
-  boot.kernelPackages = pkgs.linuxPackages_latest;
-
   nix = {
     package = pkgs.nixVersions.latest;
     extraOptions = ''
