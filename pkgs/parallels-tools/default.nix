@@ -2,7 +2,6 @@
   lib,
   stdenv,
   fetchurl,
-  requireFile,
   autoPatchelfHook,
   bbe,
   makeWrapper,
@@ -42,16 +41,14 @@ let
 in
 stdenv.mkDerivation (finalAttrs: {
   pname = "prl-tools";
-  version = "20.2.0-55871";
+ version = "20.2.0-55871";
 
+  # We download the full distribution to extract prl-tools-lin.iso from
+  # => ${dmg}/Parallels\ Desktop.app/Contents/Resources/Tools/prl-tools-lin.iso
   src = fetchurl {
-    url = "https://example.com/path/to/prl-tools-lin-arm.iso";
-    sha256 = "<PLACE_SHA256_HERE>";
-    name   = "prl-tools-lin-arm.iso";
+    url = "https://download.parallels.com/desktop/v${lib.versions.major finalAttrs.version}/${finalAttrs.version}/ParallelsDesktop-${finalAttrs.version}.dmg";
+    hash = "sha256-R7pQhmLpMOHExPwH4YM3WDnp1PcwpH5Bif3C1/N55Bg=";
   };
-
-  patches = [ ./linux-6.12.patch ];
-  patchFlags = [ "-p0" ];
 
   hardeningDisable = [
     "pic"
@@ -88,12 +85,10 @@ stdenv.mkDerivation (finalAttrs: {
   unpackPhase = ''
     runHook preUnpack
 
+    undmg $src
     export sourceRoot=prl-tools-build
-    7z x $src -o$sourceRoot
+    7z x "Parallels Desktop.app/Contents/Resources/Tools/prl-tools-lin${lib.optionalString stdenv.hostPlatform.isAarch64 "-arm"}.iso" -o$sourceRoot
     ( cd $sourceRoot/kmods; tar -xaf prl_mod.tar.gz )
-    
-    # Ensure we're in the right directory when applying patches
-    cd $sourceRoot
 
     runHook postUnpack
   '';
@@ -186,6 +181,8 @@ stdenv.mkDerivation (finalAttrs: {
 
     runHook postInstall
   '';
+
+  passthru.updateScript = ./update.sh;
 
   meta = with lib; {
     description = "Parallels Tools for Linux guests";
