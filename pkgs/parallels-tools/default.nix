@@ -55,7 +55,7 @@ stdenv.mkDerivation (finalAttrs: {
   ];
 
   nativeBuildInputs = [
-    autoPatchelfHook
+    stdenv.cc.cc.lib
     patchutils
     bbe
     makeWrapper
