@@ -1,0 +1,55 @@
+diff --git kmods/prl_fs/SharedFolders/Guest/Linux/prl_fs/inode.c kmods/prl_fs/SharedFolders/Guest/Linux/prl_fs/inode.c
+index 05e779f..e787474 100644
+--- a/kmods/prl_fs/SharedFolders/Guest/Linux/prl_fs/inode.c
++++ b/kmods/prl_fs/SharedFolders/Guest/Linux/prl_fs/inode.c
+@@ -872,7 +872,6 @@
+         kunmap(page);
+         if (ret <= 0) {
+             rc =  -EIO;
+-            SetPageError(page);
+             mapping_set_error(page->mapping, rc);
+         }
+     
+@@ -884,7 +883,7 @@
+     
+     static int prlfs_write_end(struct file *file, struct address_space *mapping,
+                                loff_t pos, unsigned int len, unsigned int copied,
+-                               struct page *page, void *fsdata)                           
++                               struct folio *folio, void *fsdata)
+     {
+         unsigned int from = pos & (PAGE_SIZE - 1);
+         struct inode *inode = mapping->host;
+@@ -894,25 +893,25 @@
+     
+         DPRINTK("ENTER inode=%p pos=%lld len=%u copied=%u\n", inode, pos, len, copied);
+     
+-        if (!PageUptodate(page) && copied < len)
+-            zero_user(page, from + copied, len - copied);
++        if (!folio_test_uptodate(folio) && copied < len)
++            folio_zero_range(folio, from + copied, len - copied);
+     
+-        buf = kmap(page);
++        buf = kmap_local_folio(folio, from);
+         ret = prlfs_rw(inode, buf + from, copied, &offset, 1, TG_REQ_COMMON);
+-        kunmap(page);
++        kunmap_local(buf);
+     
+         if (ret < 0)
+             goto out;
+     
+-        if (!PageUptodate(page) && len == PAGE_SIZE)
+-            SetPageUptodate(page);
++        if (!folio_test_uptodate(folio) && len == PAGE_SIZE)
++            folio_mark_uptodate(folio);
+     
+         if (pos + copied > inode->i_size)
+             i_size_write(inode, pos + copied);
+     
+     out:
+-        unlock_page(page);
+-        put_page(page);
++        folio_unlock(folio);
++        folio_put(folio);
+     
+         DPRINTK("EXIT ret=%ld\n", ret);
+         return ret;

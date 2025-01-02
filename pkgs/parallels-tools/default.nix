@@ -57,6 +57,7 @@ stdenv.mkDerivation (finalAttrs: {
 
   nativeBuildInputs = [
     autoPatchelfHook
+    patchutils
     bbe
     makeWrapper
     p7zip
@@ -103,6 +104,10 @@ stdenv.mkDerivation (finalAttrs: {
 
     ( # kernel modules
       cd kmods
+      find . -name "*.c" -print0 | xargs -0 sed -i \
+        -e 's/struct page \*page/struct folio \*folio/g' \
+        -e 's/PageUptodate/folio_test_uptodate/g' \
+        -e 's/SetPageUptodate/folio_mark_uptodate/g'
       make -f Makefile.kmods \
         KSRC=${kernelDir}/source \
         HEADERS_CHECK_DIR=${kernelDir}/source \
