@@ -72,7 +72,18 @@
     mkSystem = import ./lib/mksystem.nix {
       inherit overlays nixpkgs inputs;
     };
+
+    linuxPkgs = import nixpkgs {
+      system = "aarch64-linux";
+      config.allowUnfree = true;
+    };
+
+    linuxKernel = linuxPkgs.linuxPackages_latest.kernel;
   in {
+    packages.aarch64-linux.prl-tools = self.nixosConfigurations.vm-aarch64-prl.pkgs.callPackage ./pkgs/parallels-tools {
+      kernel = linuxKernel;
+    };
+
     nixosConfigurations.vm-aarch64 = mkSystem "vm-aarch64" {
       system = "aarch64-linux";
       user   = "sammyjoyce";

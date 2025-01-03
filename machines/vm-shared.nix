@@ -42,7 +42,7 @@ in {
   networking.hostName = "dev";
 
   # Set your time zone.
-  time.timeZone = "America/Los_Angeles";
+  time.timeZone = "Australia/Brisbane";
 
   # The global useDHCP flag is deprecated, therefore explicitly set to false here.
   # Per-interface useDHCP will be mandatory in the future, so this generated config
@@ -92,9 +92,9 @@ in {
 
       # AARCH64: For now, on Apple Silicon, we must manually set the
       # display resolution. This is a known issue with VMware Fusion.
-      sessionCommands = ''
-        ${pkgs.xorg.xset}/bin/xset r rate 200 40
-      '';
+      # sessionCommands = ''
+      #   ${pkgs.xorg.xset}/bin/xset r rate 200 40
+      # '';
     };
 
     windowManager = {

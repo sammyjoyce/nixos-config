@@ -53,3 +53,51 @@ index d604fff..7974e42 100644
  
  	DPRINTK("EXIT ret=%ld\n", ret);
  	return ret;
+ 
+diff --git a/SharedFolders/Guest/Linux/prl_fs/super.c b/SharedFolders/Guest/Linux/prl_fs/super.c
+--- a/SharedFolders/Guest/Linux/prl_fs/super.c
++++ b/SharedFolders/Guest/Linux/prl_fs/super.c
+@@ -1,5 +1,5 @@
+ static int prlfs_get_page_cache(struct page *page)
+ {
+-       struct page *page;
++       struct folio *folio;
+        void *buffer;
+ 
+        buffer = kmap(page);
+-       page = vmalloc_to_page(buffer);
++       folio = page_folio(vmalloc_to_page(buffer));
+        if (!buffer)
+                return -ENOMEM;
+ 
+-       page_address(page);
++       folio_address(folio);
+-       put_page(page);
++       folio_put(folio);
+        kunmap(page);
+        return 0;
+ }
+diff --git a/Toolgate/Guest/Linux/prl_tg/prltg_call.c b/Toolgate/Guest/Linux/prl_tg/prltg_call.c
+--- a/Toolgate/Guest/Linux/prl_tg/prltg_call.c
++++ b/Toolgate/Guest/Linux/prl_tg/prltg_call.c
+@@ -1,5 +1,5 @@
+ static int prlfs_get_page_cache(struct page *page)
+ {
+-       struct page *page;
++       struct folio *folio;
+        void *buffer;
+ 
+        buffer = kmap(page);
+-       page = vmalloc_to_page(buffer);
++       folio = page_folio(vmalloc_to_page(buffer));
+        if (!buffer)
+                return -ENOMEM;
+ 
+-       page_address(page);
++       folio_address(folio);
+ 
+-       put_page(page);
++       folio_put(folio);
+        kunmap(page);
+        return 0;
+ }

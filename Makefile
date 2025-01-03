@@ -2,6 +2,7 @@
 NIXADDR ?= 10.211.55.4
 NIXPORT ?= 22
 NIXUSER ?= sammyjoyce
+ROOT_PASS ?= root
 
 # Get the path to this Makefile and directory
 MAKEFILE_DIR := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
@@ -11,7 +12,7 @@ NIXNAME ?= vm-aarch64-prl
 
 # SSH options that are used. These aren't meant to be overridden but are
 # reused a lot so we just store them up here.
-SSH_OPTIONS=-o PubkeyAuthentication=no -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
+SSH_OPTIONS ?= -o PubkeyAuthentication=no -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no
 
 # We need to do some OS switching below.
 UNAME := $(shell uname)
@@ -79,12 +80,17 @@ vm/bootstrap0:
 # after bootstrap0, run this to finalize. After this, do everything else
 # in the VM unless secrets change.
 vm/bootstrap:
-	NIXUSER=root $(MAKE) vm/copy
-	NIXUSER=root $(MAKE) vm/switch
+	sshpass -p root rsync -av -e "ssh $(SSH_OPTIONS) -p$(NIXPORT)" \
+		--exclude='vendor/' \
+		--exclude='.git/' \
+		--exclude='.git-crypt/' \
+		--exclude='iso/' \
+		--rsync-path="sudo rsync" \
+		$(MAKEFILE_DIR)/ root@$(NIXADDR):/nix-config
+	sshpass -p root ssh $(SSH_OPTIONS) -p$(NIXPORT) root@$(NIXADDR) \
+		"sudo NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM=1 nixos-rebuild switch --show-trace --flake \"/nix-config#${NIXNAME}\""
 	$(MAKE) vm/secrets
-	ssh $(SSH_OPTIONS) -p$(NIXPORT) $(NIXUSER)@$(NIXADDR) " \
-		sudo reboot; \
-	"
+	sshpass -p root ssh $(SSH_OPTIONS) -p$(NIXPORT) root@$(NIXADDR) "sudo reboot"
 
 # copy our secrets into the VM
 vm/secrets:
@@ -101,18 +107,20 @@ vm/secrets:
 
 # copy the Nix configurations into the VM.
 vm/copy:
-	rsync -av -e 'ssh $(SSH_OPTIONS) -p$(NIXPORT)' \
-		--exclude='vendor/' \
-		--exclude='.git/' \
-		--exclude='.git-crypt/' \
-		--exclude='iso/' \
+	expect -c 'spawn rsync -av \
+		--exclude="vendor/" \
+		--exclude=".git/" \
+		--exclude=".git-crypt/" \
+		--exclude="iso/" \
 		--rsync-path="sudo rsync" \
-		$(MAKEFILE_DIR)/ $(NIXUSER)@$(NIXADDR):/nix-config
+		-e "ssh $(SSH_OPTIONS) -p$(NIXPORT)" \
+		$(MAKEFILE_DIR)/ root@$(NIXADDR):/nix-config; \
+		expect "password:"; send "root\n"; expect eof'
 
 # run the nixos-rebuild switch command. This does NOT copy files so you
 # have to run vm/copy before.
 vm/switch:
-	ssh $(SSH_OPTIONS) -p$(NIXPORT) $(NIXUSER)@$(NIXADDR) " \
+	sshpass -p root ssh $(SSH_OPTIONS) -p$(NIXPORT) $(NIXUSER)@$(NIXADDR) " \
 		sudo NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM=1 nixos-rebuild switch --show-trace --flake \"/nix-config#${NIXNAME}\" \
 	"
 
