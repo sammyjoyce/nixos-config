@@ -1,5 +1,5 @@
-{
-  lib,
+{ pkgs
+, lib,
   stdenv,
   fetchurl,
   bbe,

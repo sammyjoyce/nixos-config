@@ -24,7 +24,9 @@ in {
   disabledModules = [ "virtualisation/parallels-guest.nix" ];
   hardware.parallels = {
     enable = true;
-    package = (config.boot.kernelPackages.callPackage ../pkgs/parallels-tools/default.nix { });
+    package = (config.boot.kernelPackages.callPackage ../pkgs/parallels-tools/default.nix { 
+      pkgs = pkgs;
+    });
   };
 
   # Interface is this on my M1
