@@ -56,7 +56,7 @@ stdenv.mkDerivation (finalAttrs: {
 
   nativeBuildInputs = [
     stdenv.cc.cc.lib
-    patchutils
+    pkgs.patchutils
     bbe
     makeWrapper
     p7zip
