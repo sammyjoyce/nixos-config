@@ -23,25 +23,13 @@
   nixpkgs.config.allowUnfree = true;
   nixpkgs.config.allowUnsupportedSystem = true;
 
-  boot = {
-    initrd = {
-      availableKernelModules = [
-        "xhci_pci"
-        "usbhid"
-        "sr_mod"
-      ];
-      kernelModules = [ ];
-    };
-    kernelModules = [ "prl_fs" "prl_fs_freeze" "prl_tg" ];
-    kernelParams = [
-      # "root=/dev/sda2"
-      "xhci_hcd.quirks=0x40"
-      # "video=Virtual-1:3024x1890@120"
-    ];
-    extraModulePackages = [ config.boot.kernelPackages.prl-tools ];
-    loader = {
-      efi.canTouchEfiVariables = true;
-      systemd-boot.enable = true;
-    };
+  boot.kernelParams = [
+    # "root=/dev/sda2"
+    "xhci_hcd.quirks=0x40"
+    # "video=Virtual-1:3024x1890@120"
+  ];
+  boot.loader = {
+    efi.canTouchEfiVariables = true;
+    systemd-boot.enable = true;
   };
 }

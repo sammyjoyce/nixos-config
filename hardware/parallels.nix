@@ -1,14 +1,16 @@
 # Hardware configuration for Parallels
 { config, lib, pkgs, ... }: {
-  boot.initrd.availableKernelModules = [     
-    "xhci_pci"
-    "usbhid"
-    "sr_mod"
-  ];
-  boot.initrd.kernelModules = [ ];
-  boot.kernelModules = [ "prl_fs" "prl_fs_freeze" "prl_tg" ];
-  boot.kernelParams = [ "video=Virtual-1:3024x1890@120" ];
-  boot.extraModulePackages = [ config.boot.kernelPackages.prl-tools ];
+  boot = {
+    initrd.availableKernelModules = [
+      "xhci_pci"
+      "usbhid"
+      "sr_mod"
+    ];
+    initrd.kernelModules = [];
+    kernelModules = ["prl_fs" "prl_fs_freeze" "prl_tg"];
+    kernelParams = ["video=Virtual-1:2304x1296@60"];
+    extraModulePackages = [config.boot.kernelPackages.prl-tools];
+  };
 
   networking.useDHCP = lib.mkDefault true;
 
