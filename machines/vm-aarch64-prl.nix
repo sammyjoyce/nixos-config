@@ -24,9 +24,7 @@
   nixpkgs.config.allowUnsupportedSystem = true;
 
   boot.kernelParams = [
-    # "root=/dev/sda2"
-    "xhci_hcd.quirks=0x40"
-    # "video=Virtual-1:3024x1890@120"
+    # "xhci_hcd.quirks=0x40" # Moved to hardware/parallels.nix
   ];
   boot.loader = {
     efi.canTouchEfiVariables = true;

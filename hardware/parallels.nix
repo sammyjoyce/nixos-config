@@ -8,7 +8,10 @@
     ];
     initrd.kernelModules = [];
     kernelModules = ["prl_fs" "prl_fs_freeze" "prl_tg"];
-    kernelParams = ["video=Virtual-1:2304x1296@60"];
+    kernelParams = [
+      "video=Virtual-1:2304x1296@60" # Set the display resolution to 2304x1296 at 60Hz
+      "xhci_hcd.quirks=0x40" # Workaround for USB 3.0 issues
+    ];
     extraModulePackages = [config.boot.kernelPackages.prl-tools];
   };
 
