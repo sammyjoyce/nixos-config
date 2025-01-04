@@ -27,4 +27,19 @@
     efi.canTouchEfiVariables = true;
     systemd-boot.enable = true;
   };
+
+  fileSystems."/host" = {
+    device = "prl_fs";
+    fsType = "prl_fs";
+    options = [
+      "rw"
+      "noatime"
+      "share"
+      "dmode=775"
+      "fmode=664"
+      "uid=1000"
+      "gid=100"
+      "umask=002"
+    ];
+  };
 }
