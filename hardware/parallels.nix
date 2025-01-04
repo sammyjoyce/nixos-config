@@ -1,6 +1,10 @@
 # Hardware configuration for Parallels
 { config, lib, pkgs, ... }: {
-  boot.initrd.availableKernelModules = [ "xhci_pci" "sr_mod" ];
+  boot.initrd.availableKernelModules = [     
+    "xhci_pci"
+    "usbhid"
+    "sr_mod"
+  ];
   boot.initrd.kernelModules = [ ];
   boot.kernelModules = [ "prl_fs" "prl_fs_freeze" "prl_tg" ];
   boot.kernelParams = [ "video=Virtual-1:3024x1890@120" ];
@@ -17,28 +21,15 @@
     package = config.boot.kernelPackages.prl-tools;
   };
 
-  nix.settings = {
-    extra-platforms = [ "x86_64-linux" ];
-    extra-sandbox-paths = [
-      "/run/binfmt"
-      "/media/psf/RosettaLinux"
-    ];
-  };
+    fileSystems."/" =
+    { device = "/dev/disk/by-label/nixos";
+      fsType = "ext4";
+    };
 
-  # prlbinfmtconfig.sh would only register binfmt when systemd-binfmt.service is enabled.
-  # Following lines are added to ensure the service exists and is enabled when prlstoolsd.service runs
-  boot.binfmt.registrations.RosettaLinux = {
-    interpreter = "/media/psf/RosettaLinux/rosetta";
+  fileSystems."/boot" =
+    { device = "/dev/disk/by-label/boot";
+      fsType = "vfat";
+    };
 
-    # The required flags for binfmt are documented by Apple:
-    # https://developer.apple.com/documentation/virtualization/running_intel_binaries_in_linux_vms_with_rosetta
-    magicOrExtension = ''\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x3e\x00'';
-    mask = ''\xff\xff\xff\xff\xff\xfe\xfe\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff'';
-    fixBinary = true;
-    matchCredentials = true;
-    preserveArgvZero = false;
-
-    # Remove the shell wrapper and call the runtime directly
-    wrapInterpreterInShell = false;
-  };
+  swapDevices = [ ];
 }

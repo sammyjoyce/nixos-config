@@ -123,6 +123,7 @@ vm/switch:
 	sshpass -p root ssh $(SSH_OPTIONS) -p$(NIXPORT) $(NIXUSER)@$(NIXADDR) " \
 		sudo NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM=1 nixos-rebuild switch --show-trace --flake \"/nix-config#${NIXNAME}\" \
 	"
+ vm/reboot: sshpass -p root ssh -o PubkeyAuthentication=no -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p$(NIXPORT) root@$(NIXADDR) "sudo reboot"
 
 # Build a WSL installer
 .PHONY: wsl

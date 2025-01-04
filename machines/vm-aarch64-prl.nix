@@ -34,9 +34,9 @@
     };
     kernelModules = [ "prl_fs" "prl_fs_freeze" "prl_tg" ];
     kernelParams = [
-      "root=/dev/sda2"
+      # "root=/dev/sda2"
       "xhci_hcd.quirks=0x40"
-      "video=Virtual-1:3024x1890@120"
+      # "video=Virtual-1:3024x1890@120"
     ];
     extraModulePackages = [ config.boot.kernelPackages.prl-tools ];
     loader = {
@@ -44,17 +44,4 @@
       systemd-boot.enable = true;
     };
   };
-
-  fileSystems = {
-    "/" = {
-      device = "/dev/disk/by-label/nixos";
-      fsType = "btrfs";
-    };
-    "/boot" = {
-      device = "/dev/disk/by-label/boot";
-      fsType = "vfat";
-    };
-  };
-
-  swapDevices = [ ];
 }
