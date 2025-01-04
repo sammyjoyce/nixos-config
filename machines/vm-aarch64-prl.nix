@@ -13,7 +13,7 @@
     # modules to get a lot of the stuff working.
     (modulesPath + "/profiles/qemu-guest.nix")
     ./vm-shared.nix
-    ../hardware/parallels.nix
+    ./hardware/parallels.nix
   ];
 
   nixpkgs.overlays = [
@@ -23,9 +23,6 @@
   nixpkgs.config.allowUnfree = true;
   nixpkgs.config.allowUnsupportedSystem = true;
 
-  boot.kernelParams = [
-    # "xhci_hcd.quirks=0x40" # Moved to hardware/parallels.nix
-  ];
   boot.loader = {
     efi.canTouchEfiVariables = true;
     systemd-boot.enable = true;
