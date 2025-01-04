@@ -80,17 +80,17 @@ vm/bootstrap0:
 # after bootstrap0, run this to finalize. After this, do everything else
 # in the VM unless secrets change.
 vm/bootstrap:
-	sshpass -p root rsync -av -e "ssh $(SSH_OPTIONS) -p$(NIXPORT)" \
+	sshpass -p root rsync -av -e "ssh -o PubkeyAuthentication=no -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p$(NIXPORT)" \
 		--exclude='vendor/' \
 		--exclude='.git/' \
 		--exclude='.git-crypt/' \
 		--exclude='iso/' \
 		--rsync-path="sudo rsync" \
 		$(MAKEFILE_DIR)/ root@$(NIXADDR):/nix-config
-	sshpass -p root ssh $(SSH_OPTIONS) -p$(NIXPORT) root@$(NIXADDR) \
+	sshpass -p root ssh -o PubkeyAuthentication=no -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p$(NIXPORT) root@$(NIXADDR) \
 		"sudo NIXPKGS_ALLOW_UNSUPPORTED_SYSTEM=1 nixos-rebuild switch --show-trace --flake \"/nix-config#${NIXNAME}\""
 	$(MAKE) vm/secrets
-	sshpass -p root ssh $(SSH_OPTIONS) -p$(NIXPORT) root@$(NIXADDR) "sudo reboot"
+	sshpass -p root ssh -o PubkeyAuthentication=no -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p$(NIXPORT) root@$(NIXADDR) "sudo reboot"
 
 # copy our secrets into the VM
 vm/secrets:
