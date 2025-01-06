@@ -19,8 +19,6 @@
 
   nixpkgs.hostPlatform = lib.mkDefault "aarch64-linux";
 
-  # Allow unfree packages for Parallels Tools
-  nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [ "prl-tools" ];
   hardware.parallels = {
     enable = true;
     package = config.boot.kernelPackages.prl-tools;

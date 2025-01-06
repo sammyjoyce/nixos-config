@@ -1,8 +1,6 @@
 { inputs }:
 
-self: super:
-
-let sources = import ../../nix/sources.nix; in rec {
+self: super: rec {
   # My vim config
   customVim = with self; {
     vim-copilot = vimUtils.buildVimPlugin {
@@ -76,10 +74,6 @@ let sources = import ../../nix/sources.nix; in rec {
       buildPhase = ":";
     };
 
-    nvim-conform = vimUtils.buildVimPlugin {
-      name = "nvim-conform";
-      src = inputs.nvim-conform;
-    };
 
     nvim-dressing = vimUtils.buildVimPlugin {
       name = "nvim-dressing";
@@ -150,10 +144,4 @@ let sources = import ../../nix/sources.nix; in rec {
     source   = sources.tree-sitter-proto;
   };
 
-  tree-sitter-hcl = self.callPackage
-    (sources.nixpkgs + /pkgs/development/tools/parsing/tree-sitter/grammar.nix) { } {
-    language = "hcl";
-    version  = "0.1.0";
-    source   = sources.tree-sitter-hcl;
-  };
 }

@@ -1,7 +1,7 @@
 # Connectivity info for Linux VM
 NIXADDR ?= 10.211.55.4
 NIXPORT ?= 22
-NIXUSER ?= sammyjoyce
+NIXUSER ?= sam
 ROOT_PASS ?= root
 
 # Get the path to this Makefile and directory

@@ -2,112 +2,125 @@
   description = "NixOS systems and tools by sammyjoyce";
 
   inputs = {
-    # Pin our primary nixpkgs repository. This is the main nixpkgs repository
-    # we'll use for our configurations. Be very careful changing this because
-    # it'll impact your entire system.
+    # Pin our primary nixpkgs repository
     nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
-
-    # We use the unstable nixpkgs repo for some packages.
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixpkgs-unstable";
 
-    # Build a custom WSL installer
-    nixos-wsl.url = "github:nix-community/NixOS-WSL";
-    nixos-wsl.inputs.nixpkgs.follows = "nixpkgs";
-
+    # System management
     home-manager = {
       url = "github:nix-community/home-manager/release-24.11";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
     darwin = {
       url = "github:LnL7/nix-darwin";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # I think technically you're not supposed to override the nixpkgs
-    # used by neovim but recently I had failures if I didn't pin to my
-    # own. We can always try to remove that anytime.
-    neovim-nightly-overlay = {
-      url = "github:nix-community/neovim-nightly-overlay";
-    };
+    # UI components
+    hyprland.url = "github:hyprwm/Hyprland";
+    hyprland-plugins.url = "github:hyprwm/hyprland-plugins";
+    hyprland-plugins.inputs.hyprland.follows = "hyprland";
 
-    # Other packages
+    # Development tools
     jujutsu.url = "github:martinvonz/jj";
     zig.url = "github:mitchellh/zig-overlay";
+    ghostty.url = "github:ghostty-org/ghostty";
+    nix-direnv = {
+      url = "github:nix-community/nix-direnv";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
-    # Non-flakes
-    nvim-conform.url = "github:stevearc/conform.nvim/v7.1.0";
-    nvim-conform.flake = false;
-    nvim-dressing.url = "github:stevearc/dressing.nvim";
-    nvim-dressing.flake = false;
-    nvim-gitsigns.url = "github:lewis6991/gitsigns.nvim/v0.9.0";
-    nvim-gitsigns.flake = false;
-    nvim-lspconfig.url = "github:neovim/nvim-lspconfig";
-    nvim-lspconfig.flake = false;
-    nvim-lualine.url ="github:nvim-lualine/lualine.nvim";
-    nvim-lualine.flake = false;
-    nvim-nui.url = "github:MunifTanjim/nui.nvim";
-    nvim-nui.flake = false;
-    nvim-plenary.url = "github:nvim-lua/plenary.nvim";
-    nvim-plenary.flake = false;
-    nvim-telescope.url = "github:nvim-telescope/telescope.nvim/0.1.8";
-    nvim-telescope.flake = false;
-    nvim-treesitter.url = "github:nvim-treesitter/nvim-treesitter/v0.9.2";
-    nvim-treesitter.flake = false;
-    nvim-web-devicons.url = "github:nvim-tree/nvim-web-devicons";
-    nvim-web-devicons.flake = false;
-    vim-copilot.url = "github:github/copilot.vim/v1.41.0";
-    vim-copilot.flake = false;
-    vim-misc.url = "github:mitchellh/vim-misc";
-    vim-misc.flake = false;
+    # Neovim and plugins
+    neovim-nightly-overlay.url = "github:nix-community/neovim-nightly-overlay";
+
+    # Additional sources from old sources.json
+    tree-sitter-proto.url = "github:mitchellh/tree-sitter-proto";
   };
 
-  outputs = { self, nixpkgs, home-manager, darwin, ... }@inputs: let
-    # Overlays is the list of overlays we want to apply from flake inputs.
-    overlays = [
-      inputs.jujutsu.overlays.default
-      inputs.zig.overlays.default
-    ];
+  outputs = { self, nixpkgs, home-manager, darwin, ... }@inputs:
+    let
+      mkSystem = import ./lib/mksystem.nix {
+        inherit inputs;
+      };
+      # Define pkgs here for each supported system
+      allSystems = [ "aarch64-linux" "aarch64-darwin" ];
+      forAllSystems = f: nixpkgs.lib.genAttrs allSystems (system: f {
+          pkgs = import nixpkgs {
+            inherit system;
+            overlays = [ self.overlays.all ];
+            config.allowUnfree = true;
+          };
+        });
+    in
+    {
+    # Define overlays globally for all systems
+    overlays = rec {
+      # Make all overlays available under the "all" attribute
+      all = final: prev: {
+        jujutsu = inputs.jujutsu.overlays.default final prev;
+        zig = inputs.zig.overlays.default final prev;
+        prl-tools = (import ./overlays/prl-tools.nix) final prev;
+        vim = (import ./users/sammyjoyce/vim.nix { inherit inputs; }) final prev;
+        neovim-plugins = (import ./overlays/neovim-plugins.nix) final prev;
+        neovim = (import ./overlays/neovim.nix) final prev;
+        go = (import ./overlays/go.nix { inherit (final) lib fetchurl; }) final prev;
+      };
 
-    mkSystem = import ./lib/mksystem.nix {
-      inherit overlays nixpkgs inputs;
+      # Also provide each overlay individually
+      prl-tools = final: prev: (import ./overlays/prl-tools.nix) final prev;
+      neovim = final: prev: (import ./overlays/neovim.nix) final prev;
     };
-
-    linuxPkgs = import nixpkgs {
+    nixosConfigurations.vm-aarch64-prl = {
       system = "aarch64-linux";
-      config.allowUnfree = true;
-    };
-  in {
-    nixosConfigurations.vm-aarch64 = mkSystem "vm-aarch64" {
-      system = "aarch64-linux";
-      user   = "sammyjoyce";
-    };
+      config = mkSystem {
+        name = "vm-aarch64-prl";
+        user = "sam";
 
-    nixosConfigurations.vm-aarch64-prl = mkSystem "vm-aarch64-prl" rec {
-      system = "aarch64-linux";
-      user   = "sammyjoyce";
-    };
+        environment.systemPackages = [
+          inputs.ghostty.packages.aarch64-linux.default
+        ];
 
-    nixosConfigurations.vm-aarch64-utm = mkSystem "vm-aarch64-utm" rec {
-      system = "aarch64-linux";
-      user   = "sammyjoyce";
-    };
-
-    nixosConfigurations.vm-intel = mkSystem "vm-intel" rec {
-      system = "x86_64-linux";
-      user   = "sammyjoyce";
-    };
-
-    nixosConfigurations.wsl = mkSystem "wsl" {
-      system = "x86_64-linux";
-      user   = "sammyjoyce";
-      wsl    = true;
+        nix = import ./nix/settings.nix;
+      };
     };
 
     darwinConfigurations.macbook-pro-m1 = mkSystem "macbook-pro-m1" {
       system = "aarch64-darwin";
       user   = "sammyjoyce";
-      darwin = true;
+      darwin = rec { inherit (self.overlays) all; };
     };
+    devShells = forAllSystems ({ pkgs }: {
+      zig-dev = pkgs.mkShell {
+        # Required for building Ghostty from source
+        buildInputs = [
+          inputs.zig.packages.${pkgs.system}.latest
+          pkgs.pkg-config
+          pkgs.gtk4
+          pkgs.libadwaita
+          pkgs.git
+        ];
+      };
+
+      go-dev = pkgs.mkShell {
+        buildInputs = [
+          pkgs.go
+          pkgs.gopls
+          pkgs.delve
+          pkgs.gotools
+        ];
+      };
+
+      # Add a devShell for the current system
+      default = pkgs.mkShell {
+        packages = [
+          inputs.nix-direnv.packages.${pkgs.system}.default
+        ];
+
+        # Set up direnv integration
+        shellHook = ''
+          eval "$(direnv hook bash)"
+        '';
+      };
+    });
   };
 }

@@ -1,7 +1,7 @@
-diff --git a/SharedFolders/Guest/Linux/prl_fs/inode.c b/SharedFolders/Guest/Linux/prl_fs/inode.c
+diff --git a/kmods/prl_fs/SharedFolders/Guest/Linux/prl_fs/inode.c b/kmods/prl_fs/SharedFolders/Guest/Linux/prl_fs/inode.c
 index d604fff..7974e42 100644
---- a/SharedFolders/Guest/Linux/prl_fs/inode.c
-+++ b/SharedFolders/Guest/Linux/prl_fs/inode.c
+--- a/kmods/prl_fs/SharedFolders/Guest/Linux/prl_fs/inode.c
++++ b/kmods/prl_fs/SharedFolders/Guest/Linux/prl_fs/inode.c
 @@ -872,7 +872,6 @@ int prlfs_writepage(struct page *page, struct writeback_control *wbc) {
  	kunmap(page);
  	if (ret < 0) {
@@ -49,14 +49,7 @@ index d604fff..7974e42 100644
 -	unlock_page(page);
 -	put_page(page);
 +	unlock_page(&folio->page);
-+	put_folio(folio);
++	put_page(&folio->page);
  
- 	if (ret < 0)
- 		return ret;
-@@ -1000,7 +999,7 @@ const struct address_space_operations prlfs_aops = {
- 	.readpage	= prlfs_readpage,
- 	.writepage	= prlfs_writepage,
- 	.write_begin	= prlfs_write_begin,
--	.write_end	= prlfs_write_end,
-+	.write_end	= generic_write_end,
- };
+ 	DPRINTK("EXIT ret=%ld\n", ret);
+ 	return ret;

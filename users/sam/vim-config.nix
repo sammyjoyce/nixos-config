@@ -1,4 +1,4 @@
-{ sources }:
+{ inputs }:
 ''
 "--------------------------------------------------------------------
 " Fix vim paths so we load the vim-misc directory

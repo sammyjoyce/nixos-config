@@ -17,7 +17,6 @@
       "istat-menus"
       "monodraw"
       "raycast"
-      "rectangle"
       "screenflow"
       "slack"
       "spotify"

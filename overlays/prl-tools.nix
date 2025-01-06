@@ -8,7 +8,7 @@ final: prev: {
         hash = "sha256-qyRSX3FrnVxB6NU8N2CsOhsnuhK6+82oe6ftcfs9a14=";
       };
       patches = [
-        (prev.writeText "linux-6.12.patch" (builtins.readFile ../reference/linux-6.12.patch))
+        (prev.writeText "linux-6.12.patch" (builtins.readFile ../machines/hardware/linux-6.12.patch))
       ];
     });
   });

@@ -1,23 +1,40 @@
-{ isWSL, inputs, ... }:
+{ inputs, ... }:
 
 { config, lib, pkgs, ... }:
 
 let
-  sources = import ../../nix/sources.nix;
+  sources = inputs // {
+    theme-bobthefish = {
+      url = "github:oh-my-fish/theme-bobthefish";
+    };
+    tmux-dracula = {
+      url = "github:dracula/tmux";
+    };
+    tmux-pain-control = {
+      url = "github:tmux-plugins/tmux-pain-control";
+    };
+  };
   isDarwin = pkgs.stdenv.isDarwin;
   isLinux = pkgs.stdenv.isLinux;
 
-  # For our MANPAGER env var
-  # https://github.com/sharkdp/bat/issues/1145
-  manpager = (pkgs.writeShellScriptBin "manpager" (if isDarwin then ''
-    sh -c 'col -bx | bat -l man -p'
-    '' else ''
-    cat "$1" | col -bx | bat --language man --style plain
-  ''));
+  # Define a function to create the manpager script
+  mkManpager = pkgs: isDarwin:
+    pkgs.writeShellScriptBin "manpager"
+      (if isDarwin then ''
+        # macOS requires using sh -c for piping to bat
+        sh -c 'col -bx | ${pkgs.bat}/bin/bat -l man -p'
+      '' else ''
+        # Linux can pipe directly
+        # Use "$@" to handle multiple arguments correctly
+        col -bx < "$@" | ${pkgs.bat}/bin/bat --language man --style plain
+      '');
+
+  # Create the manpager script using the function
+  manpager = mkManpager pkgs isDarwin;
 in {
   # Home-manager 22.11 requires this be set. We never set it so we have
   # to use the old state version.
-  home.stateVersion = "18.09";
+  home.stateVersion = "23.11";
 
   xdg.enable = true;
 
@@ -30,11 +47,18 @@ in {
   # not a huge list.
   home.packages = [
     pkgs._1password-cli
+    # Add new packages
+    pkgs.aider-chat
+    pkgs.atuin
+    pkgs.air
+    pkgs.bun
     pkgs.asciinema
+    pkgs.grimblast  # For screenshots
     pkgs.bat
     pkgs.eza
     pkgs.fd
     pkgs.fzf
+    pkgs.python3
     pkgs.gh
     pkgs.htop
     pkgs.jq
@@ -48,14 +72,16 @@ in {
 
     # Node is required for Copilot.vim
     pkgs.nodejs
+    
+    # Custom Neovim build
+    pkgs.neovim-custom
   ] ++ (lib.optionals isDarwin [
     # This is automatically setup on Linux
     pkgs.cachix
     pkgs.tailscale
-  ]) ++ (lib.optionals (isLinux && !isWSL) [
+  ]) ++ (lib.optionals isLinux [
     pkgs.chromium
     pkgs.firefox
-    pkgs.rofi
     pkgs.valgrind
     pkgs.zathura
     pkgs.xfce.xfce4-terminal
@@ -72,6 +98,14 @@ in {
     EDITOR = "nvim";
     PAGER = "less -FirSwX";
     MANPAGER = "${manpager}/bin/manpager";
+
+    # Hyprcursor environment for apps that support server-side cursors
+    HYPRCURSOR_THEME = "MyCursor";
+    HYPRCURSOR_SIZE = "24";
+
+    # Fallback for apps that do not support hyprcursor
+    XCURSOR_THEME = "Vanilla-DMZ";
+    XCURSOR_SIZE = "24";
   };
 
   home.file = {
@@ -82,8 +116,6 @@ in {
   } else {});
 
   xdg.configFile = {
-    "i3/config".text = builtins.readFile ./i3;
-    "rofi/config.rasi".text = builtins.readFile ./rofi;
 
     # tree-sitter parsers
     "nvim/parser/proto.so".source = "${pkgs.tree-sitter-proto}/parser";
@@ -93,10 +125,7 @@ in {
       "${sources.tree-sitter-proto}/queries/highlights.scm";
     "nvim/queries/proto/textobjects.scm".source =
       ./textobjects.scm;
-  } // (if isDarwin then {
-    # Rectangle.app. This has to be imported manually using the app.
-    "rectangle/RectangleConfig.json".text = builtins.readFile ./RectangleConfig.json;
-  } else {}) // (if isLinux then {
+  } // (if isLinux then {
     "ghostty/config".text = builtins.readFile ./ghostty.linux;
     "jj/config.toml".source = ./jujutsu.toml;
   } else {});
@@ -128,6 +157,7 @@ in {
 
   programs.direnv= {
     enable = true;
+    nix-direnv.enable = true;
 
     config = {
       whitelist = {
@@ -171,13 +201,19 @@ in {
       pbpaste = "xclip -o";
     } else {});
 
-    plugins = map (n: {
-      name = n;
-      src  = sources.${n};
-    }) [
-      "fish-fzf"
-      "fish-foreign-env"
-      "theme-bobthefish"
+    plugins = [
+      {
+        name = "fish-fzf";
+        src = sources.fish-fzf;
+      }
+      {
+        name = "fish-foreign-env";
+        src = sources.fish-foreign-env;
+      }
+      {
+        name = "theme-bobthefish";
+        src = sources.theme-bobthefish;
+      }
     ];
   };
 
@@ -239,91 +275,56 @@ in {
     '';
   };
 
-  programs.alacritty = {
-    enable = !isWSL;
-
-    settings = {
-      env.TERM = "xterm-256color";
-
-      key_bindings = [
-        { key = "K"; mods = "Command"; chars = "ClearHistory"; }
-        { key = "V"; mods = "Command"; action = "Paste"; }
-        { key = "C"; mods = "Command"; action = "Copy"; }
-        { key = "Key0"; mods = "Command"; action = "ResetFontSize"; }
-        { key = "Equals"; mods = "Command"; action = "IncreaseFontSize"; }
-        { key = "Subtract"; mods = "Command"; action = "DecreaseFontSize"; }
-      ];
-    };
-  };
 
   programs.kitty = {
-    enable = !isWSL;
+    enable = isLinux;
     extraConfig = builtins.readFile ./kitty;
   };
 
-  programs.i3status = {
-    enable = isLinux && !isWSL;
-
-    general = {
-      colors = true;
-      color_good = "#8C9440";
-      color_bad = "#A54242";
-      color_degraded = "#DE935F";
+  wayland.windowManager.hyprland = {
+    enable = isLinux;
+    systemd.variables = ["--all"];
+    settings = {
+      "$mod" = "SUPER";
+      bind = [
+        "$mod, F, exec, firefox"
+        ", Print, exec, grimblast copy area"
+      ] ++ (
+        # workspaces
+        # binds $mod + [shift +] {1..9} to [move to] workspace {1..9}
+        builtins.concatLists (builtins.genList (i:
+            let ws = i + 1;
+            in [
+              "$mod, code:1${toString i}, workspace, ${toString ws}"
+              "$mod SHIFT, code:1${toString i}, movetoworkspace, ${toString ws}"
+            ]
+          )
+          9)
+      );
     };
-
-    modules = {
-      ipv6.enable = false;
-      "wireless _first_".enable = false;
-      "battery all".enable = false;
-    };
+    plugins = [
+      inputs.hyprland-plugins.packages.${pkgs.system}.hyprbars
+    ];
   };
 
-   programs.neovim = {
+
+  gtk = lib.mkIf isLinux {
     enable = true;
-    package = inputs.neovim-nightly-overlay.packages.${pkgs.system}.default;
-
-    withPython3 = true;
-
-    plugins = with pkgs; [
-      customVim.vim-copilot
-      customVim.vim-cue
-      customVim.vim-fish
-      customVim.vim-glsl
-      customVim.vim-misc
-      customVim.vim-pgsql
-      customVim.vim-tla
-      customVim.vim-zig
-      customVim.pigeon
-      customVim.AfterColors
-
-      customVim.vim-nord
-      customVim.nvim-comment
-      customVim.nvim-conform
-      customVim.nvim-dressing
-      customVim.nvim-gitsigns
-      customVim.nvim-lualine
-      customVim.nvim-lspconfig
-      customVim.nvim-nui
-      customVim.nvim-plenary # required for telescope
-      customVim.nvim-telescope
-      customVim.nvim-treesitter
-      customVim.nvim-treesitter-playground
-      customVim.nvim-treesitter-textobjects
-
-      vimPlugins.vim-eunuch
-      vimPlugins.vim-markdown
-      vimPlugins.vim-nix
-      vimPlugins.typescript-vim
-      vimPlugins.nvim-treesitter-parsers.elixir
-    ] ++ (lib.optionals (!isWSL) [
-      # This is causing a segfaulting while building our installer
-      # for WSL so just disable it for now. This is a pretty
-      # unimportant plugin anyway.
-      customVim.nvim-web-devicons
-    ]);
-
-    extraConfig = (import ./vim-config.nix) { inherit sources; };
+    theme = {
+      package = pkgs.flat-remix-gtk;
+      name = "Flat-Remix-GTK-Grey-Darkest";
+    };
+    iconTheme = {
+      package = pkgs.gnome.adwaita-icon-theme;
+      name = "Adwaita";
+    };
+    font = {
+      name = "Sans";
+      size = 11;
+    };
   };
+
+
 
   services.gpg-agent = {
     enable = isLinux;
@@ -336,11 +337,4 @@ in {
 
   xresources.extraConfig = builtins.readFile ./Xresources;
 
-  # Make cursor not tiny on HiDPI screens
-  home.pointerCursor = lib.mkIf (isLinux && !isWSL) {
-    name = "Vanilla-DMZ";
-    package = pkgs.vanilla-dmz;
-    size = 128;
-    x11.enable = true;
-  };
 }

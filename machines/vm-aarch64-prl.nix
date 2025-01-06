@@ -16,12 +16,7 @@
     ./hardware/parallels.nix
   ];
 
-  nixpkgs.overlays = [
-    (import ../overlays/prl-tools.nix)
-  ];
 
-  nixpkgs.config.allowUnfree = true;
-  nixpkgs.config.allowUnsupportedSystem = true;
 
   boot.loader = {
     efi.canTouchEfiVariables = true;
@@ -41,5 +36,10 @@
       "gid=100"
       "umask=002"
     ];
+  };
+
+  environment.etc."host-home" = {
+    source = "/host/Users/sammyjoyce";
+    recursive = true;
   };
 }

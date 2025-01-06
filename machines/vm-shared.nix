@@ -1,29 +1,9 @@
 { config, pkgs, lib, currentSystem, currentSystemName,... }:
 
-let
-  # Turn this to true to use gnome instead of i3. This is a bit
-  # of a hack, I just flip it on as I need to develop gnome stuff
-  # for now.
-  linuxGnome = false;
-in {
+{
   nix = {
-    package = pkgs.nixVersions.latest;
-    extraOptions = ''
-      experimental-features = nix-command flakes
-      keep-outputs = true
-      keep-derivations = true
-    '';
-
-    # public binary cache that I use for all my derivations. You can keep
-    # this, use your own, or toss it. Its typically safe to use a binary cache
-    # since the data inside is checksummed.
-    settings = {
-    #   substituters = ["https://sammyjoyce-nixos-config.cachix.org"];
-    #   trusted-public-keys = ["sammyjoyce-nixos-config.cachix.org-1:1WuoON+PtJiKPuydwkiVRMbcxX/0BTZLtQMMobzkeP8="];
-     substituters = ["https://mitchellh-nixos-config.cachix.org"];
-      trusted-public-keys = ["mitchellh-nixos-config.cachix.org-1:bjEbXJyLrL1HZZHBbO4QALnI5faYZppzkU4D2s0G8RQ="];
-    };
-  };
+    package = pkgs.nixVersions.git;
+  } // (import ../nix/settings.nix).nixSettings;
 
   nixpkgs.config.permittedInsecurePackages = [
     # Needed for k2pdfopt 2.53.
@@ -34,8 +14,6 @@ in {
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  # VMware, Parallels both only support this being 0 otherwise you see
-  # "error switching console mode" on boot.
   boot.loader.systemd-boot.consoleMode = "0";
 
   # Define your hostname.
@@ -70,13 +48,7 @@ in {
   };
 
   # setup windowing environment
-  services.xserver = if linuxGnome then {
-    enable = true;
-    xkb.layout = "us";
-    desktopManager.gnome.enable = true;
-    displayManager.gdm.enable = true;
-
-  } else {
+  services.xserver = {
     enable = true;
     xkb.layout = "us";
     dpi = 220;
@@ -87,18 +59,13 @@ in {
     };
 
     displayManager = {
-      defaultSession = "none+i3";
+      defaultSession = "none+hyprland";
       lightdm.enable = true;
 
-      # AARCH64: For now, on Apple Silicon, we must manually set the
-      # display resolution. This is a known issue with VMware Fusion.
-      # sessionCommands = ''
-      #   ${pkgs.xorg.xset}/bin/xset r rate 200 40
-      # '';
     };
 
     windowManager = {
-      i3.enable = true;
+      hyprland.enable = true;
     };
   };
 
@@ -120,20 +87,17 @@ in {
   environment.systemPackages = with pkgs; [
     cachix
     gnumake
+    # Add new packages
+    aider-chat
+    atuin
+    air
+    bun
     killall
     niv
     xclip
+    nix
 
-    # For hypervisors that support auto-resizing, this script forces it.
-    # I've noticed not everyone listens to the udev events so this is a hack.
-    (writeShellScriptBin "xrandr-auto" ''
-      xrandr --output Virtual-1 --auto
-    '')
   ] ++ lib.optionals (currentSystemName == "vm-aarch64") [
-    # This is needed for the vmware user tools clipboard to work.
-    # You can test if you don't need this by deleting this and seeing
-    # if the clipboard sill works.
-    gtkmm3
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -147,7 +111,9 @@ in {
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
   services.openssh.settings.PasswordAuthentication = true;
-  services.openssh.settings.PermitRootLogin = "no";
+  services.openssh.settings.PermitRootLogin = "yes";
+  # Allow empty passwords so we don't get locked out
+  services.openssh.settings.PermitEmptyPasswords = "yes";
 
   # Enable flatpak. I don't use any flatpak apps but I do sometimes
   # test them so I keep this enabled.
@@ -163,5 +129,6 @@ in {
   # this value at the release version of the first install of this system.
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "20.09"; # Did you read the comment?
+  system.stateVersion = "23.11"; # Did you read the comment?
+
 }

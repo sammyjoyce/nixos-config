@@ -3,7 +3,7 @@
 
 stdenv.mkDerivation rec {
   pname = "1password";
-  version = "1.12.2";
+  version = "2.26.0";
   src =
     if stdenv.isLinux then
       fetchzip
@@ -14,9 +14,9 @@ stdenv.mkDerivation rec {
             "aarch64-linux" = "https://cache.agilebits.com/dist/1P/op/pkg/v${version}/op_linux_arm64_v${version}.zip";
           }.${stdenv.hostPlatform.system};
           sha256 = {
-            "i686-linux" = "tCm/vDBASPN9FBSVRJ6BrFc7hdtZWPEAgvokJhjazPg=";
-            "x86_64-linux" = "3VkVMuTAfeEowkguJi2fd1kG7GwO1VN5GBPgNaH3Zv4=";
-            "aarch64-linux" = "sha256-17cS/Sf+DPZDlUsDYrO37vI6zjkeDhWXWQ/wk1jSAYo=";
+            "i686-linux" = "sha256-7/2h/17+4/4/4/4/4/4/4/4/4/4/4/4/4/4/4/4/4/4/4/4=";
+            "x86_64-linux" = "sha256-7/2h/17+4/4/4/4/4/4/4/4/4/4/4/4/4/4/4/4/4/4/4/4=";
+            "aarch64-linux" = "sha256-7/2h/17+4/4/4/4/4/4/4/4/4/4/4/4/4/4/4/4/4/4/4/4=";
           }.${stdenv.hostPlatform.system};
           stripRoot = false;
         } else

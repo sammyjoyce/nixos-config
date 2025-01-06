@@ -127,8 +127,8 @@ end
 # Vars
 #-------------------------------------------------------------------------------
 # Modify our path to include our Go binaries
-contains $HOME/code/go/bin $fish_user_paths; or set -Ua fish_user_paths $HOME/code/go/bin
-contains $HOME/bin $fish_user_paths; or set -Ua fish_user_paths $HOME/bin
+fish_add_path $HOME/code/go/bin
+fish_add_path $HOME/bin
 
 # Exported variables
 if isatty
