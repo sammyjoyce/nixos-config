@@ -84,7 +84,7 @@ vm/bootstrap:
 		--exclude='vendor/' \
 		--exclude='.git/' \
 		--exclude='.git-crypt/' \
-		--bwlimit=1M \
+		--bwlimit=1000 \
 		--exclude='iso/' \
 		--rsync-path="sudo rsync" \
 		$(MAKEFILE_DIR)/ root@$(NIXADDR):/nix-config
