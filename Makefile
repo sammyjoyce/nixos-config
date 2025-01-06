@@ -50,19 +50,19 @@ cache:
 # in one step but when I tried to merge them I got errors. One day.
 vm/bootstrap0:
 	ssh $(SSH_OPTIONS) -p$(NIXPORT) root@$(NIXADDR) " \
-		parted /dev/sda -- mklabel gpt; \
-		parted /dev/sda -- mkpart primary 512MB -8GB; \
-		parted /dev/sda -- mkpart primary linux-swap -8GB 100\%; \
-		parted /dev/sda -- mkpart ESP fat32 1MB 512MB; \
-		parted /dev/sda -- set 3 esp on; \
+		parted /dev/vda -- mklabel gpt; \
+		parted /dev/vda -- mkpart primary 512MB -8GB; \
+		parted /dev/vda -- mkpart primary linux-swap -8GB 100\%; \
+		parted /dev/vda -- mkpart ESP fat32 1MB 512MB; \
+		parted /dev/vda -- set 3 esp on; \
 		sleep 1; \
-		mkfs.ext4 -L nixos /dev/sda1; \
-		mkswap -L swap /dev/sda2; \
-		mkfs.fat -F 32 -n boot /dev/sda3; \
+		mkfs.ext4 -L nixos /dev/vda1; \
+		mkswap -L swap /dev/vda2; \
+		mkfs.fat -F 32 -n boot /dev/vda3; \
 		sleep 1; \
-		mount /dev/disk/by-label/nixos /mnt; \
+		mount /dev/vda1 /mnt; \
 		mkdir -p /mnt/boot; \
-		mount /dev/disk/by-label/boot /mnt/boot; \
+		mount /dev/vda3 /mnt/boot; \
 		nixos-generate-config --root /mnt; \
 		sed --in-place '/system\.stateVersion = .*/a \
 			nix.package = pkgs.nixVersions.git;\n \
